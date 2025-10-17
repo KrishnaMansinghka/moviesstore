@@ -11,4 +11,11 @@ def about(request):
     return render(request,
                   'home/about.html',
                   {'template_data': template_data})
+
+def local_popularity_map(request):
+    template_data = {}
+    template_data['title'] = 'Local Popularity Map'
+    return render(request,
+                  'home/local_popularity_map.html',
+                  {'template_data': template_data})
 # Create your views here.
