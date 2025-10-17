@@ -1,5 +1,6 @@
-{& extends 'base.html' %}
+{% extends 'base.html' %}
 {% block content %}
+{% load static %}
 <header class="masthead bg-index text-white text-center py-4">
     <div class="container d-flex align-items-center flex-column pt-2">
         <h2>Local Popularity Map</h2>
@@ -10,9 +11,128 @@
     <div class="container">
         <div class="row mt-3">
             <div class="col mx-auto text-center mb-3">
-                <!-- Content will be added here -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Movie Popularity by Location</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="map" style="height: 500px; width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Popular Movies by State</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush" id="state-list">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                California
+                                <span class="badge bg-primary rounded-pill">Action Movies</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                New York
+                                <span class="badge bg-success rounded-pill">Drama</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Texas
+                                <span class="badge bg-warning rounded-pill">Comedy</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Florida
+                                <span class="badge bg-info rounded-pill">Horror</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Map Legend</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-primary rounded-circle me-2" style="width: 20px; height: 20px;"></div>
+                            <span>Action Movies</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-success rounded-circle me-2" style="width: 20px; height: 20px;"></div>
+                            <span>Drama</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-warning rounded-circle me-2" style="width: 20px; height: 20px;"></div>
+                            <span>Comedy</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-info rounded-circle me-2" style="width: 20px; height: 20px;"></div>
+                            <span>Horror</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+<script>
+// Initialize the map
+var map = L.map('map').setView([39.8283, -98.5795], 4); // Center on USA
+
+// Add OpenStreetMap tiles
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+// Sample data for movie popularity by state
+var movieData = [
+    {name: "California", lat: 36.7783, lng: -119.4179, genre: "Action", color: "blue"},
+    {name: "New York", lat: 42.1657, lng: -74.9481, genre: "Drama", color: "green"},
+    {name: "Texas", lat: 31.9686, lng: -99.9018, genre: "Comedy", color: "orange"},
+    {name: "Florida", lat: 27.7663, lng: -82.6404, genre: "Horror", color: "cyan"},
+    {name: "Illinois", lat: 40.3363, lng: -89.0022, genre: "Action", color: "blue"},
+    {name: "Pennsylvania", lat: 41.2033, lng: -77.1945, genre: "Drama", color: "green"},
+    {name: "Ohio", lat: 40.3888, lng: -82.7649, genre: "Comedy", color: "orange"},
+    {name: "Georgia", lat: 33.0406, lng: -83.6431, genre: "Horror", color: "cyan"}
+];
+
+// Add markers for each state
+movieData.forEach(function(state) {
+    var marker = L.circleMarker([state.lat, state.lng], {
+        radius: 15,
+        fillColor: state.color,
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+    }).addTo(map);
+    
+    marker.bindPopup("<b>" + state.name + "</b><br>Popular Genre: " + state.genre);
+});
+
+// Add click event to state list items
+document.getElementById('state-list').addEventListener('click', function(e) {
+    if (e.target.classList.contains('list-group-item')) {
+        var stateName = e.target.textContent.split('\n')[0].trim();
+        var state = movieData.find(s => s.name === stateName);
+        if (state) {
+            map.setView([state.lat, state.lng], 6);
+        }
+    }
+});
+</script>
 {% endblock content %}

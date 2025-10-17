@@ -3,7 +3,9 @@ from django.shortcuts import get_object_or_404, redirect
 from movies.models import Movie
 from .utils import calculate_cart_total
 from .models import Order, Item
+from .forms import StateSelectionForm
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 
 @login_required
@@ -12,11 +14,19 @@ def purchase(request):
     movie_ids = list(cart.keys())
     if (movie_ids == []):
         return redirect('cart.index')
+    
+    # Check if state is selected in session
+    selected_state = request.session.get('selected_state')
+    if not selected_state:
+        messages.error(request, 'Please select your state before proceeding with the purchase.')
+        return redirect('cart.index')
+    
     movies_in_cart = Movie.objects.filter(id__in=movie_ids)
     cart_total = calculate_cart_total(cart, movies_in_cart)
     order = Order()
     order.user = request.user
     order.total = cart_total
+    order.state = selected_state
     order.save()
     for movie in movies_in_cart:
         item = Item()
@@ -26,6 +36,7 @@ def purchase(request):
         item.quantity = cart[str(movie.id)]
         item.save()
     request.session['cart'] = {}
+    request.session['selected_state'] = None  # Clear the state from session
     template_data = {}
     template_data['title'] = 'Purchase confirmation'
     template_data['order_id'] = order.id
@@ -40,10 +51,23 @@ def index(request):
         movies_in_cart = Movie.objects.filter(id__in=movie_ids)
         cart_total = calculate_cart_total(cart,
             movies_in_cart)
+    
+    # Handle state selection form
+    if request.method == 'POST':
+        form = StateSelectionForm(request.POST)
+        if form.is_valid():
+            request.session['selected_state'] = form.cleaned_data['state']
+            messages.success(request, f'State selected: {dict(Order.STATE_CHOICES)[form.cleaned_data["state"]]}')
+            return redirect('cart.index')
+    else:
+        form = StateSelectionForm()
+    
     template_data = {}
     template_data['title'] = 'Cart'
     template_data['movies_in_cart'] = movies_in_cart
     template_data['cart_total'] = cart_total
+    template_data['form'] = form
+    template_data['selected_state'] = request.session.get('selected_state')
     return render(request, 'cart/index.html', {'template_data': template_data})
 
 
