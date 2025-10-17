@@ -10,50 +10,6 @@
         <hr />
       </div>
     </div>
-    
-    <!-- State Selection Form -->
-    <div class="row mb-4">
-      <div class="col-md-6 mx-auto">
-        <div class="card">
-          <div class="card-header">
-            <h5>Shipping Information</h5>
-          </div>
-          <div class="card-body">
-            {% if template_data.selected_state %}
-              <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> 
-                State selected: <strong>{{ template_data.selected_state|default:"None" }}</strong>
-              </div>
-            {% else %}
-              <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle"></i> 
-                Please select your state before proceeding with the purchase.
-              </div>
-            {% endif %}
-            
-            <form method="post">
-              {% csrf_token %}
-              <div class="mb-3">
-                <label for="{{ template_data.form.state.id_for_label }}" class="form-label">
-                  {{ template_data.form.state.label }}
-                </label>
-                {{ template_data.form.state }}
-                {% if template_data.form.state.errors %}
-                  <div class="text-danger">
-                    {% for error in template_data.form.state.errors %}
-                      <small>{{ error }}</small>
-                    {% endfor %}
-                  </div>
-                {% endif %}
-              </div>
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-map-marker-alt"></i> Select State
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
     <div class="row m-1">
       <table class="table table-bordered table-striped
         text-center">
@@ -83,19 +39,9 @@
         <a class="btn btn-outline-secondary mb-2"><b>Total
           to pay:</b> ${{ template_data.cart_total }}</a>
         {% if template_data.movies_in_cart|length > 0 %}
-          {% if template_data.selected_state %}
-            <a href="{% url 'cart.purchase' %}" class="btn bg-dark text-white mb-2">
-              <i class="fas fa-shopping-cart"></i> Purchase
-            </a>
-          {% else %}
-            <button class="btn bg-dark text-white mb-2" disabled title="Please select your state first">
-              <i class="fas fa-shopping-cart"></i> Purchase
-            </button>
-          {% endif %}
+        <a href="{% url 'cart.purchase' %}" class="btn bg-dark text-white mb-2">Purchase </a>
         <a href="{% url 'cart.clear' %}">
-          <button class="btn btn-danger mb-2"> 
-            <i class="fas fa-trash"></i> Remove all movies from Cart 
-          </button>
+          <button class="btn btn-danger mb-2"> Remove all movies from Cart </button>
         </a>
         {% endif %}
 
