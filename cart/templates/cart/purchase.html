@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load cart_filters %}
 {% block content %}
 <div class="p-3">
   <div class="container">
@@ -6,9 +7,22 @@
       <div class="col mx-auto mb-3">
         <h2>Purchase Completed</h2>
         <hr />
-        <p>Congratulations, purchase completed. Order
-          number is: <b>#{{ template_data.order_id }}</b>
-        </p>
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Order Confirmation</h5>
+            <p class="card-text">Congratulations, your purchase has been completed successfully!</p>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item"><strong>Order Number:</strong> #{{ template_data.order_id }}</li>
+              {% if template_data.state %}
+                <li class="list-group-item"><strong>Delivery State:</strong> {{ template_data.state|get_state_name }}</li>
+              {% endif %}
+            </ul>
+            <div class="mt-3">
+              <a href="{% url 'home.index' %}" class="btn btn-primary">Continue Shopping</a>
+              <a href="{% url 'accounts.orders' %}" class="btn btn-outline-secondary">View All Orders</a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

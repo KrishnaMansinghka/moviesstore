@@ -1,4 +1,5 @@
-{& extends 'base.html' %}
+{% extends 'base.html' %}
+{% load static %}
 {% block content %}
 <header class="masthead bg-index text-white text-center py-4">
     <div class="container d-flex align-items-center flex-column pt-2">
@@ -10,9 +11,105 @@
     <div class="container">
         <div class="row mt-3">
             <div class="col mx-auto text-center mb-3">
-                <!-- Content will be added here -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Movie Popularity by Location</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="map" style="height: 500px; width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Popular Movies by State</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="state-movies">
+                            <!-- State movie data will be populated here -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+<script>
+// Initialize the map
+var map = L.map('map').setView([39.8283, -98.5795], 4); // Center on USA
+
+// Add OpenStreetMap tiles
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// Sample data for movie popularity by state
+var stateData = {
+    "California": { lat: 36.7783, lng: -119.4179, movies: ["Avengers: Endgame", "Black Panther", "Inception"] },
+    "New York": { lat: 42.1657, lng: -74.9481, movies: ["The Godfather", "Goodfellas", "Taxi Driver"] },
+    "Texas": { lat: 31.9686, lng: -99.9018, movies: ["No Country for Old Men", "Dallas Buyers Club", "Boyhood"] },
+    "Florida": { lat: 27.7663, lng: -82.6404, movies: ["Scarface", "Miami Vice", "The Birdcage"] },
+    "Illinois": { lat: 40.3363, lng: -89.0022, movies: ["The Dark Knight", "Ferris Bueller's Day Off", "The Blues Brothers"] },
+    "Pennsylvania": { lat: 41.2033, lng: -77.1945, movies: ["Rocky", "The Sixth Sense", "Unbreakable"] },
+    "Ohio": { lat: 40.3888, lng: -82.7649, movies: ["The Shawshank Redemption", "Rain Man", "The Deer Hunter"] },
+    "Georgia": { lat: 33.0406, lng: -83.6431, movies: ["Gone with the Wind", "Forrest Gump", "The Walking Dead"] },
+    "North Carolina": { lat: 35.6300, lng: -79.8064, movies: ["Dirty Dancing", "The Last of the Mohicans", "Bull Durham"] },
+    "Michigan": { lat: 43.3266, lng: -84.5361, movies: ["8 Mile", "Gran Torino", "Only Lovers Left Alive"] }
+};
+
+// Add markers for each state
+Object.keys(stateData).forEach(function(state) {
+    var data = stateData[state];
+    var marker = L.marker([data.lat, data.lng]).addTo(map);
+    
+    var popupContent = '<div><h6>' + state + '</h6><p><strong>Popular Movies:</strong></p><ul>';
+    data.movies.forEach(function(movie) {
+        popupContent += '<li>' + movie + '</li>';
+    });
+    popupContent += '</ul></div>';
+    
+    marker.bindPopup(popupContent);
+});
+
+// Populate state movies section
+var stateMoviesContainer = document.getElementById('state-movies');
+Object.keys(stateData).forEach(function(state) {
+    var data = stateData[state];
+    var stateDiv = document.createElement('div');
+    stateDiv.className = 'col-md-6 col-lg-4 mb-3';
+    
+    var moviesList = data.movies.map(function(movie) {
+        return '<li class="list-group-item">' + movie + '</li>';
+    }).join('');
+    
+    stateDiv.innerHTML = `
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="mb-0">${state}</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    ${moviesList}
+                </ul>
+            </div>
+        </div>
+    `;
+    
+    stateMoviesContainer.appendChild(stateDiv);
+});
+</script>
 {% endblock content %}
