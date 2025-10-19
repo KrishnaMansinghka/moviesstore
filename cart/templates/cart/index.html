@@ -10,6 +10,52 @@
         <hr />
       </div>
     </div>
+    
+    <!-- Display messages -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+    
+    <!-- State Selection Form -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5>Location Information</h5>
+          </div>
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+              <div class="mb-3">
+                {{ template_data.form.state.label_tag }}
+                {{ template_data.form.state }}
+                {% if template_data.form.state.errors %}
+                  <div class="text-danger">
+                    {% for error in template_data.form.state.errors %}
+                      <small>{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <button type="submit" class="btn btn-primary">Save State</button>
+            </form>
+            {% if template_data.selected_state %}
+              <div class="mt-2">
+                <small class="text-success">
+                  <i class="fas fa-check-circle"></i> 
+                  State selected: {{ template_data.selected_state|get_state_name }}
+                </small>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="row m-1">
       <table class="table table-bordered table-striped
         text-center">
@@ -39,7 +85,12 @@
         <a class="btn btn-outline-secondary mb-2"><b>Total
           to pay:</b> ${{ template_data.cart_total }}</a>
         {% if template_data.movies_in_cart|length > 0 %}
-        <a href="{% url 'cart.purchase' %}" class="btn bg-dark text-white mb-2">Purchase </a>
+          {% if template_data.selected_state %}
+            <a href="{% url 'cart.purchase' %}" class="btn bg-dark text-white mb-2">Purchase </a>
+          {% else %}
+            <button class="btn bg-dark text-white mb-2" disabled title="Please select a state first">Purchase</button>
+            <small class="text-warning d-block">Please select your state before purchasing</small>
+          {% endif %}
         <a href="{% url 'cart.clear' %}">
           <button class="btn btn-danger mb-2"> Remove all movies from Cart </button>
         </a>
