@@ -38,12 +38,12 @@
         <span class="me-3"><strong>Average Rating:</strong></span>
         <div class="star-display me-2">
           {% for i in "12345" %}
-            <span class="fas fa-star star-avg" data-rating="{{ forloop.counter }}">★</span>
+            <i class="fas fa-star star-avg" data-rating="{{ forloop.counter }}"></i>
           {% endfor %}
         </div>
-        <span class="text-muted">(<span id="avg-rating-value">0.0</span>/5 • <span id="rating-count">0</span> rating<span id="rating-plural">s</span>)</span>
+        <span class="text-muted">(<span id="avg-rating-value">{{ template_data.rating_stats.average_rating|default:"0.0" }}</span>/5 • <span id="rating-count">{{ template_data.rating_stats.total_ratings|default:"0" }}</span> rating<span id="rating-plural">{% if template_data.rating_stats.total_ratings != 1 %}s{% endif %}</span>)</span>
       </div>
-      <div id="no-ratings-message" class="text-muted mt-2" style="display: block;">
+      <div id="no-ratings-message" class="text-muted mt-2" style="display: {% if template_data.rating_stats.total_ratings == 0 %}block{% else %}none{% endif %};">
         <small><i class="fas fa-star-half-alt me-1"></i>Be the first to rate this movie!</small>
       </div>
     </div>
@@ -56,7 +56,7 @@
           <span class="me-3"><strong>Your Rating:</strong></span>
           <div class="star-rating me-3" id="user-rating">
             {% for i in "12345" %}
-              <span class="fas fa-star star-user" data-rating="{{ forloop.counter }}" title="{{ forloop.counter }} star{{ forloop.counter|pluralize }}">★</span>
+              <i class="fas fa-star star-user" data-rating="{{ forloop.counter }}" title="{{ forloop.counter }} star{{ forloop.counter|pluralize }}"></i>
             {% endfor %}
           </div>
           <button id="submit-rating" class="btn btn-sm btn-success me-2" style="display: none;">
@@ -150,16 +150,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const avgStars = document.querySelectorAll('.star-avg');
     
     let selectedRating = 0;
-    let currentUserRating = 0; // This will be populated from backend
+    // Load current user rating from backend
+    let currentUserRating = {{ template_data.user_rating|default:0 }};
     
-    // Initialize display
-    updateAverageRatingDisplay(0, 0); // Start with no ratings - will be updated from backend
+    // Initialize display with real backend data
+    const avgRating = {{ template_data.rating_stats.average_rating|default:0 }};
+    const totalRatings = {{ template_data.rating_stats.total_ratings|default:0 }};
+    updateAverageRatingDisplay(avgRating, totalRatings);
     updateUserRatingDisplay(currentUserRating);
-    
-    // Test function to simulate some ratings for demo
-    setTimeout(() => {
-        updateAverageRatingDisplay(4.2, 15); // Demo: show 4.2 stars with 15 ratings
-    }, 1000);
     
     // Star hover effects
     userStars.forEach((star, index) => {

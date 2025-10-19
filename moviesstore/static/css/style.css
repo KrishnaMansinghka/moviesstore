@@ -63,7 +63,6 @@
   padding: 4px;
   display: inline-block;
   user-select: none;
-  font-family: Arial, sans-serif;
 }
 
 .star-user:hover {
@@ -89,7 +88,6 @@
   font-size: 1.3em;
   text-shadow: 0 1px 3px rgba(0,0,0,0.2);
   display: inline-block;
-  font-family: Arial, sans-serif;
   user-select: none;
 }
 
@@ -131,7 +129,8 @@
 /* Star visibility enhancement */
 .star-user, .star-avg {
   font-style: normal !important;
-  font-weight: normal !important;
+  font-weight: 900 !important;
+  font-family: "Font Awesome 6 Free" !important;
 }
 
 /* Ensure stars are visible on different backgrounds */
