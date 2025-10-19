@@ -27,6 +27,60 @@
           </form>
         </p>
 
+  <!-- Rating Section -->
+  <div class="rating-section mb-4">
+    <h2><i class="fas fa-star me-2"></i>Rating</h2>
+    <hr />
+    
+    <!-- Display Average Rating -->
+    <div class="mb-3">
+      <div class="d-flex align-items-center flex-wrap">
+        <span class="me-3"><strong>Average Rating:</strong></span>
+        <div class="star-display me-2">
+          {% for i in "12345" %}
+            <span class="fas fa-star star-avg" data-rating="{{ forloop.counter }}">★</span>
+          {% endfor %}
+        </div>
+        <span class="text-muted">(<span id="avg-rating-value">0.0</span>/5 • <span id="rating-count">0</span> rating<span id="rating-plural">s</span>)</span>
+      </div>
+      <div id="no-ratings-message" class="text-muted mt-2" style="display: block;">
+        <small><i class="fas fa-star-half-alt me-1"></i>Be the first to rate this movie!</small>
+      </div>
+    </div>
+
+    <!-- User Rating Interface -->
+    {% if user.is_authenticated %}
+    <div class="user-rating-section">
+      <div class="mb-3">
+        <div class="d-flex align-items-center flex-wrap mb-2">
+          <span class="me-3"><strong>Your Rating:</strong></span>
+          <div class="star-rating me-3" id="user-rating">
+            {% for i in "12345" %}
+              <span class="fas fa-star star-user" data-rating="{{ forloop.counter }}" title="{{ forloop.counter }} star{{ forloop.counter|pluralize }}">★</span>
+            {% endfor %}
+          </div>
+          <button id="submit-rating" class="btn btn-sm btn-success me-2" style="display: none;">
+            <i class="fas fa-check me-1"></i>Submit Rating
+          </button>
+          <button id="clear-rating" class="btn btn-sm btn-outline-secondary" style="display: none;">
+            <i class="fas fa-times me-1"></i>Clear
+          </button>
+        </div>
+        <small class="text-muted">
+          <i class="fas fa-info-circle me-1"></i>
+          Click on the stars to rate this movie
+        </small>
+      </div>
+      <div id="rating-message" class="alert" style="display: none;"></div>
+    </div>
+    {% else %}
+    <div class="alert alert-info mb-0">
+      <i class="fas fa-info-circle me-2"></i>
+      Please <a href="{% url 'accounts.login' %}" class="alert-link">login</a> to rate this movie.
+    </div>
+    {% endif %}
+  </div>
+
   <h2>Reviews</h2>
         <hr />
         <ul class="list-group">
@@ -82,4 +136,190 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userStars = document.querySelectorAll('.star-user');
+    const submitBtn = document.getElementById('submit-rating');
+    const clearBtn = document.getElementById('clear-rating');
+    const messageDiv = document.getElementById('rating-message');
+    const avgRatingValue = document.getElementById('avg-rating-value');
+    const ratingCount = document.getElementById('rating-count');
+    const ratingPlural = document.getElementById('rating-plural');
+    const noRatingsMessage = document.getElementById('no-ratings-message');
+    const avgStars = document.querySelectorAll('.star-avg');
+    
+    let selectedRating = 0;
+    let currentUserRating = 0; // This will be populated from backend
+    
+    // Initialize display
+    updateAverageRatingDisplay(0, 0); // Start with no ratings - will be updated from backend
+    updateUserRatingDisplay(currentUserRating);
+    
+    // Test function to simulate some ratings for demo
+    setTimeout(() => {
+        updateAverageRatingDisplay(4.2, 15); // Demo: show 4.2 stars with 15 ratings
+    }, 1000);
+    
+    // Star hover effects
+    userStars.forEach((star, index) => {
+        star.addEventListener('mouseenter', function() {
+            highlightStars(index + 1, 'hover');
+        });
+        
+        star.addEventListener('mouseleave', function() {
+            highlightStars(selectedRating, 'selected');
+        });
+        
+        star.addEventListener('click', function() {
+            selectedRating = index + 1;
+            highlightStars(selectedRating, 'selected');
+            submitBtn.style.display = 'inline-block';
+            clearBtn.style.display = 'inline-block';
+            hideMessage();
+        });
+    });
+    
+    // Submit rating
+    submitBtn.addEventListener('click', function() {
+        if (selectedRating > 0) {
+            submitRating(selectedRating);
+        }
+    });
+    
+    // Clear rating
+    clearBtn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear your rating?')) {
+            selectedRating = 0;
+            highlightStars(0, 'selected');
+            submitBtn.style.display = 'none';
+            clearBtn.style.display = 'none';
+            hideMessage();
+            
+            // If user had a previous rating, call API to remove it
+            if (currentUserRating > 0) {
+                removeRating();
+            }
+        }
+    });
+    
+    function highlightStars(rating, className) {
+        userStars.forEach((star, index) => {
+            star.classList.remove('selected', 'hover');
+            if (index < rating) {
+                star.classList.add(className);
+            }
+        });
+    }
+    
+    function updateUserRatingDisplay(rating) {
+        currentUserRating = rating;
+        selectedRating = rating;
+        highlightStars(rating, 'selected');
+        if (rating > 0) {
+            submitBtn.style.display = 'inline-block';
+            clearBtn.style.display = 'inline-block';
+        }
+    }
+    
+    function updateAverageRatingDisplay(avgRating, totalRatings) {
+        avgRatingValue.textContent = avgRating.toFixed(1);
+        ratingCount.textContent = totalRatings || 0;
+        ratingPlural.textContent = totalRatings === 1 ? '' : 's';
+        
+        // Show/hide no ratings message
+        if (totalRatings === 0) {
+            noRatingsMessage.style.display = 'block';
+        } else {
+            noRatingsMessage.style.display = 'none';
+        }
+        
+        avgStars.forEach((star, index) => {
+            star.classList.remove('filled');
+            if (index < Math.floor(avgRating)) {
+                star.classList.add('filled');
+            } else if (index < avgRating) {
+                // For partial stars, you could add half-star logic here
+                star.classList.add('filled');
+            }
+        });
+    }
+    
+    function submitRating(rating) {
+        // Disable submit button during request
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        
+        // Make AJAX request to submit rating
+        fetch(`/movies/{{ template_data.movie.id }}/rate/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                'rating': rating
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('Rating submitted successfully!', 'success');
+                updateAverageRatingDisplay(data.average_rating, data.total_ratings);
+                currentUserRating = rating;
+            } else {
+                showMessage('Error submitting rating. Please try again.', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error submitting rating. Please try again.', 'danger');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Rating';
+        });
+    }
+    
+    function removeRating() {
+        // Make AJAX request to remove rating
+        fetch(`/movies/{{ template_data.movie.id }}/rate/`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('Rating removed successfully!', 'info');
+                updateAverageRatingDisplay(data.average_rating, data.total_ratings);
+                currentUserRating = 0;
+            } else {
+                showMessage('Error removing rating. Please try again.', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error removing rating. Please try again.', 'danger');
+        });
+    }
+    
+    function showMessage(text, type) {
+        messageDiv.textContent = text;
+        messageDiv.className = `alert alert-${type}`;
+        messageDiv.style.display = 'block';
+        
+        // Hide message after 4 seconds
+        setTimeout(() => {
+            hideMessage();
+        }, 4000);
+    }
+    
+    function hideMessage() {
+        messageDiv.style.display = 'none';
+    }
+});
+</script>
 {% endblock content %}
