@@ -1,0 +1,18 @@
+# Python cache / compiled files
+__pycache__/
+*.py[cod]
+
+# SQLite databases
+*.sqlite3
+db.sqlite3
+
+# Virtual environments
+venv/
+.env/
+.env.*
+
+# macOS
+.DS_Store
+
+# Uploaded media
+media/
